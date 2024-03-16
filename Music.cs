@@ -96,41 +96,6 @@ public class Music : BaseCommandModule
         await ctx.RespondAsync($"Now playing {track.Title}.");
     
     }
-    
-    // [Command("play")]
-    // public async Task Play(CommandContext ctx, Uri url)
-    // {
-    //     if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
-    //     {
-    //         await ctx.RespondAsync("Not connected to a voice channel");
-    //         return;
-    //     }
-    //
-    //     var lava = ctx.Client.GetLavalink();
-    //     var node = lava.ConnectedNodes.Values.First();
-    //     var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
-    //
-    //     if (conn == null)
-    //     {
-    //         await ctx.RespondAsync("Not connected");
-    //         return;
-    //     }
-    //
-    //     var loadResult = await node.Rest.GetTracksAsync(url);
-    //
-    //     if (loadResult.LoadResultType is LavalinkLoadResultType.NoMatches or LavalinkLoadResultType.LoadFailed)
-    //     {
-    //         await ctx.RespondAsync($"Unable to find a track from {url}");
-    //         return;
-    //     }
-    //
-    //     var track = loadResult.Tracks.First();
-    //
-    //     await conn.PlayAsync(track);
-    //
-    //     await ctx.RespondAsync($"Now playing {track.Title}.");
-    //
-    // }
 
     [Command("pause")]
     public async Task Pause(CommandContext ctx)

@@ -1,19 +1,20 @@
-﻿using DSharpPlus;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 
 namespace College_Hotline.Commands;
 
 public class Music : BaseCommandModule
 
-//rewrite using different lavalink
 {
     [Command("join")]
-    public async Task Join(CommandContext ctx, DiscordChannel channel)
+    public async Task Join(CommandContext ctx)
     {
         var lava = ctx.Client.GetLavalink();
+
+        var channel = ctx.Member?.VoiceState.Channel;
+        
         if (!lava.ConnectedNodes.Any())
         {
             await ctx.RespondAsync("Connection failed");
@@ -22,9 +23,9 @@ public class Music : BaseCommandModule
 
         var node = lava.ConnectedNodes.Values.First();
 
-        if (channel.Type != ChannelType.Voice)
+        if (channel!.Type != ChannelType.Voice)
         {
-            await ctx.RespondAsync("Cannot join a text channel.");
+            await ctx.RespondAsync("Failed to join");
             return;
         }
 
@@ -33,9 +34,12 @@ public class Music : BaseCommandModule
     }
     
     [Command("leave")]
-    public async Task Leave(CommandContext ctx, DiscordChannel channel)
+    public async Task Leave(CommandContext ctx)
     {
         var lava = ctx.Client.GetLavalink();
+
+        var channel = ctx.Member?.VoiceState.Channel;
+        
         if (!lava.ConnectedNodes.Any())
         {
             await ctx.RespondAsync("Connection failed");
@@ -44,7 +48,7 @@ public class Music : BaseCommandModule
 
         var node = lava.ConnectedNodes.Values.First();
 
-        if (channel.Type != ChannelType.Voice)
+        if (channel!.Type != ChannelType.Voice)
         {
             await ctx.RespondAsync("Cannot leave a text channel.");
             return;
@@ -65,9 +69,9 @@ public class Music : BaseCommandModule
     [Command("play")]
     public async Task Play(CommandContext ctx, [RemainingText] string search)
     {
-        if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
+        if (ctx.Member!.VoiceState.Channel is null)
         {
-            await ctx.RespondAsync("Not connected to a voice channel");
+            await ctx.RespondAsync("Please connect to a voice channel first");
             return;
         }
     
@@ -75,10 +79,10 @@ public class Music : BaseCommandModule
         var node = lava.ConnectedNodes.Values.First();
         var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
     
-        if (conn == null)
+        if (conn is null)
         {
-            await ctx.RespondAsync("Not connected");
-            return;
+            await Join(ctx);
+            conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
         }
     
         var loadResult = await node.Rest.GetTracksAsync(search, LavalinkSearchType.SoundCloud);
@@ -97,10 +101,33 @@ public class Music : BaseCommandModule
     
     }
 
+    [Command("playing")]
+    public async Task Playing(CommandContext ctx)
+    {
+        var lava = ctx.Client.GetLavalink();
+        var node = lava.ConnectedNodes.Values.First();
+        var conn = node.GetGuildConnection(ctx.Member!.VoiceState.Guild);
+
+        if (conn is null)
+        {
+            await ctx.RespondAsync("Bot is not currently connected to a voice channel");
+            return;
+        }
+
+        if (conn.CurrentState.CurrentTrack is null)
+        {
+            await ctx.RespondAsync("Bot is not currently playing a track");
+            return;
+        }
+        
+        await ctx.RespondAsync($"Currently playing {conn.CurrentState.CurrentTrack.Title}");
+
+    }
+
     [Command("pause")]
     public async Task Pause(CommandContext ctx)
     {
-        if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
+        if (ctx.Member!.VoiceState.Channel is null)
         {
             await ctx.RespondAsync("You are not in a voice .");
             return;
@@ -123,5 +150,12 @@ public class Music : BaseCommandModule
         }
 
         await conn.PauseAsync();
+    }
+
+    [Command("stop")]
+    public async Task Stop(CommandContext ctx)
+    {
+        await Pause(ctx);
+        await Leave(ctx);
     }
 }

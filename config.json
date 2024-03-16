@@ -1,4 +1,7 @@
 ﻿{
   "token": "token",
   "prefix": "!"
+  "hostname": "localhost",
+  "port": "2333",
+  "password": "password"
 }
